@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Dettaglio Oggetto</title>
+</head>
+<body>
+    <main id="dettaglio-container">
+        <h1 id="titolo-oggetto">Caricamento...</h1>
+        <p id="descrizione"></p>
+        
+        <!-- Sezione Pagamenti -->
+        <div id="sezione-pagamento">
+            <h3>Seleziona metodo di pagamento</h3>
+            <select id="metodo-pagamento">
+                <option value="card">Carta di Credito</option>
+                <option value="paypal">PayPal</option>
+            </select>
+            <button onclick="procediPrenotazione()">Conferma Prestito</button>
+        </div>
+    </main>
+
+    <script>
+        // Logica per recuperare l'ID dall'URL e chiamare l'API di Jules
+        const urlParams = new URLSearchParams(window.location.search);
+        const oggettoId = urlParams.get('id');
+        
+        async function caricaDettaglio() {
+            const response = await fetch(`/api/oggetti/${oggettoId}`);
+            const data = await response.json();
+            // Popola i campi...
+        }
+        caricaDettaglio();
+    </script>
+</body>
+</html>

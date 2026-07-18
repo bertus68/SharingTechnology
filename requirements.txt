@@ -1,0 +1,7 @@
+# Contenuto di requirements.txt
+fastapi
+uvicorn
+jinja2
+python-multipart
+pydantic
+
