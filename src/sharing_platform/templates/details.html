@@ -2,35 +2,195 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Dettaglio Oggetto</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sharing Platform - Dettaglio {{ oggetto.nome }}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <main id="dettaglio-container">
-        <h1 id="titolo-oggetto">Caricamento...</h1>
-        <p id="descrizione"></p>
-        
-        <!-- Sezione Pagamenti -->
-        <div id="sezione-pagamento">
-            <h3>Seleziona metodo di pagamento</h3>
-            <select id="metodo-pagamento">
-                <option value="card">Carta di Credito</option>
-                <option value="paypal">PayPal</option>
-            </select>
-            <button onclick="procediPrenotazione()">Conferma Prestito</button>
+<body class="bg-gray-50 text-gray-900 flex flex-col min-h-screen">
+
+    <!-- HEADER -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center space-x-2 text-indigo-600 font-extrabold text-xl tracking-wider">
+                <i class="fa-solid fa-people-carry-box text-2xl"></i>
+                <span>SHARING PLATFORM - P2P</span>
+            </a>
+            <nav class="hidden md:flex space-x-8 font-medium text-gray-600">
+                <a href="/" class="hover:text-indigo-600 transition-colors">Home</a>
+                <a href="/#categories" class="hover:text-indigo-600 transition-colors">Categorie</a>
+                {% if user %}
+                <a href="/oggetti/crea" class="hover:text-indigo-600 transition-colors text-indigo-500 font-semibold">
+                    <i class="fa-solid fa-plus-circle mr-1"></i>Condividi Oggetto
+                </a>
+                {% endif %}
+            </nav>
+            <div class="flex items-center space-x-4">
+                {% if user %}
+                <div class="flex items-center space-x-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                        {{ user.nome[0] | upper }}
+                    </div>
+                    <span class="font-semibold text-gray-800 text-sm mr-2">{{ user.nome }}</span>
+                    <a href="/logout" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors">Esci</a>
+                </div>
+                {% else %}
+                <a href="/login" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm shadow-sm flex items-center space-x-1">
+                    <i class="fa-solid fa-sign-in-alt"></i>
+                    <span>Accedi / Registrati</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
+        <!-- Back Link -->
+        <a href="/" class="inline-flex items-center space-x-1 text-sm font-bold text-indigo-600 hover:text-indigo-800 mb-6 transition-colors">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Torna al catalogo oggetti</span>
+        </a>
+
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2 gap-8 p-6 md:p-8">
+
+            <!-- SEZIONE IMMAGINI (Galleria) -->
+            <div class="space-y-4">
+                <div class="aspect-video w-full rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
+                    <img src="{{ oggetto.immagine_url1 or 'https://images.unsplash.com/photo-1504148455328-c376907d081c?q=80&w=600' }}"
+                         alt="{{ oggetto.nome }}" class="w-full h-full object-cover">
+                </div>
+
+                {% if oggetto.immagine_url2 %}
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="aspect-video rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                        <img src="{{ oggetto.immagine_url1 }}" alt="{{ oggetto.nome }}" class="w-full h-full object-cover opacity-80 hover:opacity-100 cursor-pointer transition-opacity">
+                    </div>
+                    <div class="aspect-video rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                        <img src="{{ oggetto.immagine_url2 }}" alt="{{ oggetto.nome }}" class="w-full h-full object-cover opacity-80 hover:opacity-100 cursor-pointer transition-opacity">
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- SEZIONE METADATI E PRENOTAZIONE -->
+            <div class="flex flex-col justify-between space-y-6">
+                <div class="space-y-4">
+                    <!-- Categoria and Badge -->
+                    <div class="flex items-center justify-between">
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                            {{ oggetto.categoria }}
+                        </span>
+
+                        <!-- Dynamic State Badge -->
+                        {% if oggetto.stato == 'Disponibile' %}
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-black px-3 py-1 rounded-full border border-emerald-200 tracking-wider flex items-center space-x-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Disponibile ora</span>
+                        </span>
+                        {% else %}
+                        <span class="bg-rose-100 text-rose-800 text-xs font-black px-3 py-1 rounded-full border border-rose-200 tracking-wider flex items-center space-x-1.5">
+                            <i class="fa-solid fa-calendar-times"></i>
+                            <span>Prenotato fino al {{ oggetto.prenotazione.data_fine if oggetto.prenotazione else '...' }}</span>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 leading-tight">
+                        {{ oggetto.nome }}
+                    </h1>
+
+                    <!-- Descrizione Breve e Lunga -->
+                    <div class="space-y-2 border-t border-gray-100 pt-4">
+                        <h3 class="text-xs font-bold uppercase text-gray-400 tracking-widest">Descrizione</h3>
+                        <p class="font-semibold text-gray-700 text-base">
+                            {{ oggetto.descrizione_breve }}
+                        </p>
+                        <p class="text-sm text-gray-500 leading-relaxed">
+                            {{ oggetto.descrizione_lunga }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- PRESTITO ACTION CONTAINER -->
+                <div class="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-4">
+                    {% if oggetto.stato == 'Prenotato' %}
+                    <!-- Rendered disabled server-side -->
+                    <div class="space-y-2 text-center py-2">
+                        <div class="text-rose-600 font-extrabold text-base flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <span>Questo oggetto è attualmente prenotato.</span>
+                        </div>
+                        <p class="text-xs text-gray-500">Tornerà disponibile dopo il {{ oggetto.prenotazione.data_fine if oggetto.prenotazione else '...' }}</p>
+                    </div>
+                    <button class="w-full bg-gray-300 text-gray-500 font-extrabold py-3.5 px-6 rounded-xl cursor-not-allowed shadow-inner flex items-center justify-center space-x-2 text-base" disabled>
+                        <i class="fa-solid fa-lock"></i>
+                        <span>Prenotazione non disponibile</span>
+                    </button>
+                    {% else %}
+                        {% if user %}
+                        <!-- Rendered enabled server-side if user is logged in -->
+                        <form action="/oggetti/{{ oggetto.id }}/prenota" method="POST" class="space-y-4">
+                            <h3 class="font-extrabold text-gray-800 text-sm flex items-center space-x-2">
+                                <i class="fa-solid fa-calendar-plus text-indigo-500"></i>
+                                <span>Richiedi un periodo di prestito</span>
+                            </h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-gray-500">Data Inizio</label>
+                                    <input type="date" name="data_inizio" required class="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs font-bold text-gray-500">Data Fine</label>
+                                    <input type="date" name="data_fine" required class="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                                </div>
+                            </div>
+                            <!-- Sezione Pagamenti descritta in tesi.md -->
+                            <div class="border-t border-gray-200/60 pt-4 space-y-2">
+                                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Metodo di Pagamento Fiduciario</h4>
+                                <div class="flex items-center space-x-2">
+                                    <select id="metodo-pagamento" class="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                                        <option value="card">Carta di Credito (Pre-autorizzazione)</option>
+                                        <option value="paypal">PayPal Escrow</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 px-6 rounded-xl shadow-md transition-colors flex items-center justify-center space-x-2 text-base">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>Conferma Prestito</span>
+                            </button>
+                        </form>
+                        {% else %}
+                        <!-- Se l'utente non è loggato -->
+                        <div class="space-y-3 text-center py-2">
+                            <p class="text-sm text-gray-600 font-medium">Vuoi prendere in prestito questo oggetto?</p>
+                            <a href="/login" class="inline-flex w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 px-6 rounded-xl shadow-md transition-colors justify-center items-center space-x-2 text-base">
+                                <i class="fa-solid fa-sign-in-alt"></i>
+                                <span>Accedi per Prenotare</span>
+                            </a>
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
         </div>
     </main>
 
-    <script>
-        // Logica per recuperare l'ID dall'URL e chiamare l'API di Jules
-        const urlParams = new URLSearchParams(window.location.search);
-        const oggettoId = urlParams.get('id');
-        
-        async function caricaDettaglio() {
-            const response = await fetch(`/api/oggetti/${oggettoId}`);
-            const data = await response.json();
-            // Popola i campi...
-        }
-        caricaDettaglio();
-    </script>
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-gray-400 border-t border-gray-800 py-12 mt-12">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+            <span class="text-white font-extrabold text-lg tracking-wider flex items-center justify-center space-x-2">
+                <i class="fa-solid fa-people-carry-box text-indigo-500 text-2xl"></i>
+                <span>SHARING PLATFORM - P2P</span>
+            </span>
+            <p class="text-xs text-gray-500">
+                &copy; 2026 SHARING PLATFORM - P2P. Tutti i diritti riservati. Progetto di Tesi in Sharing Economy.
+            </p>
+        </div>
+    </footer>
+
 </body>
 </html>

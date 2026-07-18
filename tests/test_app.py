@@ -7,20 +7,18 @@ import sharing_platform.router as router_module
 
 
 def test_root(monkeypatch):
-    # mock FileResponse per evitare accesso file system
-    class FakeResponse:
-        def __init__(self, path):
-            self.path = path
-
-    monkeypatch.setattr(app_module, "FileResponse", FakeResponse)
-
     app = app_module.app
     client = TestClient(app)
+
+    # Mock database call to get empty lists
+    monkeypatch.setattr(router_module, "get_oggetti_con_prenotazioni", lambda **kwargs: [])
+    monkeypatch.setattr(router_module, "get_categorie", lambda: [])
 
     res = client.get("/")
 
     assert res.status_code == 200
-    assert res.json() == {"path": "src/sharing_platform/templates/index.html"}
+    # Confirm it rendered the HTML template correctly
+    assert "Sharing Platform" in res.text
 
 
 def test_router_is_wired(monkeypatch):

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sharing Platform - Condividi Oggetto</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 text-gray-900 flex flex-col min-h-screen">
+
+    <!-- HEADER -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center space-x-2 text-indigo-600 font-extrabold text-xl tracking-wider">
+                <i class="fa-solid fa-people-carry-box text-2xl"></i>
+                <span>SHARING PLATFORM - P2P</span>
+            </a>
+            <div class="flex items-center space-x-4">
+                {% if user %}
+                <div class="flex items-center space-x-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                        {{ user.nome[0] | upper }}
+                    </div>
+                    <span class="font-semibold text-gray-800 text-sm mr-2">{{ user.nome }}</span>
+                    <a href="/logout" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors">Esci</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="max-w-2xl mx-auto px-4 py-10 flex-grow w-full">
+        <!-- Back Link -->
+        <a href="/" class="inline-flex items-center space-x-1 text-sm font-bold text-indigo-600 hover:text-indigo-800 mb-6 transition-colors">
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Torna alla Home</span>
+        </a>
+
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden p-6 md:p-8 space-y-6">
+
+            <div class="space-y-2 border-b border-gray-100 pb-4">
+                <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 leading-tight">
+                    Condividi un nuovo oggetto
+                </h1>
+                <p class="text-sm text-gray-500">
+                    Inserisci i dettagli e carica le immagini per renderlo disponibile al prestito.
+                </p>
+            </div>
+
+            <!-- CREATE FORM -->
+            <form action="/oggetti/crea" method="POST" class="space-y-6">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Nome Oggetto</label>
+                        <input type="text" name="nome" required placeholder="Trapano Bosch, Bici..."
+                               class="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Categoria</label>
+                        <select name="categoria" required class="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500">
+                            {% for c in categorie %}
+                            <option value="{{ c.nome }}">{{ c.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Descrizione Breve</label>
+                    <input type="text" name="descrizione_breve" required placeholder="Una descrizione breve per la card dell'oggetto"
+                           class="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">Descrizione Lunga (Dettagliata)</label>
+                    <textarea name="descrizione_lunga" rows="4" required placeholder="Fornisci dettagli sul funzionamento, accessori e condizioni dell'oggetto"
+                              class="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">URL Immagine Principale</label>
+                        <input type="url" name="immagine_url1" placeholder="https://unsplash.com/... (Lascia vuoto per default)"
+                               class="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-gray-500 uppercase tracking-wider">URL Seconda Immagine</label>
+                        <input type="url" name="immagine_url2" placeholder="https://unsplash.com/..."
+                               class="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3.5 px-6 rounded-xl shadow-md transition-colors flex items-center justify-center space-x-2 text-base">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>Pubblica Oggetto</span>
+                </button>
+            </form>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-gray-400 border-t border-gray-800 py-6 text-center text-xs">
+        &copy; 2026 SHARING PLATFORM - P2P. Tutti i diritti riservati.
+    </footer>
+
+</body>
+</html>
