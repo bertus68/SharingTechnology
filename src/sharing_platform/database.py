@@ -413,22 +413,22 @@ def create_prenotazione(
     """Crea una nuova prenotazione per un oggetto."""
     conn = get_connection()
     try:
-        conn.execute(
-            """
-            INSERT INTO prenotazioni
-            (oggetto_id, id_oggetto, utente_id, id_richiedente,
-             data_inizio, data_fine, stato_prenotazione, stato)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (id_oggetto, id_oggetto, id_richiedente, id_richiedente,
-             data_inizio, data_fine, "attiva", stato)
-        )
-        # Aggiorna lo stato dell'oggetto prenotato
-        conn.execute(
-            "UPDATE oggetti SET disponibilita = 0, stato = 'Prenotato' WHERE id = ?",
-            (id_oggetto,)
-        )
-        conn.commit()
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO prenotazioni
+                (oggetto_id, id_oggetto, utente_id, id_richiedente,
+                 data_inizio, data_fine, stato_prenotazione, stato)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (id_oggetto, id_oggetto, id_richiedente, id_richiedente,
+                 data_inizio, data_fine, "attiva", stato)
+            )
+            # Aggiorna lo stato dell'oggetto prenotato
+            conn.execute(
+                "UPDATE oggetti SET disponibilita = 0, stato = 'Prenotato' WHERE id = ?",
+                (id_oggetto,)
+            )
     finally:
         conn.close()
 
@@ -446,28 +446,28 @@ def update_prenotazione_stato(prenotazione_id, stato):
     """Aggiorna lo stato di una prenotazione."""
     conn = get_connection()
     try:
-        # If concluse or rifiutata, we free up the object!
-        if stato in ("conclusa", "rifiutata", "chiusa"):
-            # Find associated object id
-            row = conn.execute(
-                "SELECT oggetto_id FROM prenotazioni WHERE id = ?",
-                (prenotazione_id,)
-            ).fetchone()
-            if row:
-                obj_id = row["oggetto_id"]
-                conn.execute(
-                    "UPDATE oggetti SET disponibilita = 1, stato = 'Disponibile' WHERE id = ?",
-                    (obj_id,)
-                )
-            stato_prenotazione = "conclusa"
-        else:
-            stato_prenotazione = "attiva"
+        with conn:
+            # If concluse or rifiutata, we free up the object!
+            if stato in ("conclusa", "rifiutata", "chiusa"):
+                # Find associated object id
+                row = conn.execute(
+                    "SELECT oggetto_id FROM prenotazioni WHERE id = ?",
+                    (prenotazione_id,)
+                ).fetchone()
+                if row:
+                    obj_id = row["oggetto_id"]
+                    conn.execute(
+                        "UPDATE oggetti SET disponibilita = 1, stato = 'Disponibile' WHERE id = ?",
+                        (obj_id,)
+                    )
+                stato_prenotazione = "conclusa"
+            else:
+                stato_prenotazione = "attiva"
 
-        conn.execute(
-            "UPDATE prenotazioni SET stato = ?, stato_prenotazione = ? WHERE id = ?",
-            (stato, stato_prenotazione, prenotazione_id)
-        )
-        conn.commit()
+            conn.execute(
+                "UPDATE prenotazioni SET stato = ?, stato_prenotazione = ? WHERE id = ?",
+                (stato, stato_prenotazione, prenotazione_id)
+            )
     finally:
         conn.close()
 
