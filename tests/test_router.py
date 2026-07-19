@@ -109,9 +109,7 @@ def test_prenota_oggetto_already_booked(monkeypatch):
         "descrizione_breve": "",
         "descrizione_lunga": "",
     }
-    monkeypatch.setattr(
-        router_module, "get_oggetto_con_prenotazione_by_id", lambda obj_id: fake_row
-    )
+    monkeypatch.setattr(router_module, "get_oggetto_con_prenotazione_by_id", lambda obj_id: fake_row)
     client.cookies.set("user_email", "mario@test.com")
     fake_user = {
         "id": 1, "nome": "Mario", "email": "mario@test.com",
@@ -119,10 +117,7 @@ def test_prenota_oggetto_already_booked(monkeypatch):
     }
     monkeypatch.setattr(router_module, "get_utente_by_email", lambda email: fake_user)
 
-    res = client.post(
-        "/oggetti/1/prenota",
-        data={"data_inizio": "2026-06-01", "data_fine": "2026-06-10"}
-    )
+    res = client.post("/oggetti/1/prenota", data={"data_inizio": "2026-06-01", "data_fine": "2026-06-10"})
     assert res.status_code == 400
     assert res.json()["detail"] == "Oggetto non disponibile per la prenotazione"
 
@@ -143,9 +138,7 @@ def test_prenota_oggetto_invalid_dates(monkeypatch):
         "descrizione_breve": "",
         "descrizione_lunga": "",
     }
-    monkeypatch.setattr(
-        router_module, "get_oggetto_con_prenotazione_by_id", lambda obj_id: fake_row
-    )
+    monkeypatch.setattr(router_module, "get_oggetto_con_prenotazione_by_id", lambda obj_id: fake_row)
     client.cookies.set("user_email", "mario@test.com")
     fake_user = {
         "id": 1, "nome": "Mario", "email": "mario@test.com",
@@ -154,10 +147,7 @@ def test_prenota_oggetto_invalid_dates(monkeypatch):
     monkeypatch.setattr(router_module, "get_utente_by_email", lambda email: fake_user)
 
     # Fine precedente all'inizio
-    res = client.post(
-        "/oggetti/1/prenota",
-        data={"data_inizio": "2026-06-10", "data_fine": "2026-06-01"}
-    )
+    res = client.post("/oggetti/1/prenota", data={"data_inizio": "2026-06-10", "data_fine": "2026-06-01"})
     assert res.status_code == 400
     assert res.json()["detail"] == "La data di fine non può essere precedente alla data di inizio"
 

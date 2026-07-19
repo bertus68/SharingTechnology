@@ -155,13 +155,7 @@ def handle_create_oggetto(
         return RedirectResponse(url="/login", status_code=303)
 
     try:
-        is_missing = (
-            not nome.strip() or
-            not descrizione_breve.strip() or
-            not descrizione_lunga.strip() or
-            not categoria.strip()
-        )
-        if is_missing:
+        if not nome.strip() or not descrizione_breve.strip() or not descrizione_lunga.strip() or not categoria.strip():
             raise ValueError("I campi obbligatori non possono essere vuoti")
 
         create_oggetto(
@@ -225,22 +219,13 @@ def handle_prenota_oggetto(
 
         oggetto = row_to_oggetto(row)
         if not oggetto.disponibilita:
-            raise HTTPException(
-                status_code=400,
-                detail="Oggetto non disponibile per la prenotazione"
-            )
+            raise HTTPException(status_code=400, detail="Oggetto non disponibile per la prenotazione")
 
         if not data_inizio or not data_fine:
-            raise HTTPException(
-                status_code=400,
-                detail="Le date di inizio e fine sono obbligatorie"
-            )
+            raise HTTPException(status_code=400, detail="Le date di inizio e fine sono obbligatorie")
 
         if data_fine < data_inizio:
-            raise HTTPException(
-                status_code=400,
-                detail="La data di fine non può essere precedente alla data di inizio"
-            )
+            raise HTTPException(status_code=400, detail="La data di fine non può essere precedente alla data di inizio")
 
         create_prenotazione(
             id_oggetto=obj_id,
