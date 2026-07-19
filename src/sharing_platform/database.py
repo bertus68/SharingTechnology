@@ -5,6 +5,7 @@ Date: 2026-05-31
 """
 import sqlite3
 import time
+from sharing_platform.seed_data import seed_database
 
 
 DB_NAME = "app.db"
@@ -21,211 +22,78 @@ def get_connection():
 # INITIALIZATION & SEEDING
 # =========================
 
+def get_schema_scripts() -> str:
+    """Restituisce le query SQL necessarie a inizializzare lo schema del database."""
+    return """
+    CREATE TABLE IF NOT EXISTS utenti (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        nome TEXT,
+        email TEXT UNIQUE,
+        password_hash TEXT,
+        metodo_pagamento TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS categorie (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT UNIQUE,
+        icona_path TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS oggetti (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        proprietario_id INTEGER,
+        id_proprietario INTEGER,
+        nome TEXT,
+        descrizione TEXT,
+        descrizione_breve TEXT,
+        descrizione_lunga TEXT,
+        categoria TEXT,
+        categoria_id INTEGER,
+        stato TEXT DEFAULT 'Disponibile',
+        immagine_url1 TEXT,
+        immagine_url2 TEXT,
+        disponibilita INTEGER DEFAULT 1,
+        FOREIGN KEY (proprietario_id) REFERENCES utenti(id),
+        FOREIGN KEY (categoria_id) REFERENCES categorie(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS prenotazioni (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        oggetto_id INTEGER,
+        id_oggetto INTEGER,
+        utente_id INTEGER,
+        id_richiedente INTEGER,
+        data_inizio TEXT,
+        data_fine TEXT,
+        stato_prenotazione TEXT DEFAULT 'attiva',
+        stato TEXT DEFAULT 'in_attesa',
+        FOREIGN KEY (oggetto_id) REFERENCES oggetti(id),
+        FOREIGN KEY (utente_id) REFERENCES utenti(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS pagamenti (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id_prenotazione INTEGER,
+        importo REAL,
+        stato TEXT,
+        tipo TEXT,
+        FOREIGN KEY (id_prenotazione) REFERENCES prenotazioni(id)
+    );
+    """
+
+
 def init_db():
     """Inizializza il database con lo schema normalizzato e i dati seed."""
     conn = get_connection()
     try:
         conn.execute("PRAGMA foreign_keys = ON;")
-
-        # 1. Tabella utenti
-        conn.execute("""
-        CREATE TABLE IF NOT EXISTS utenti (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            nome TEXT,
-            email TEXT UNIQUE,
-            password_hash TEXT,
-            metodo_pagamento TEXT
-        )
-        """)
-
-        # 2. Tabella categorie
-        conn.execute("""
-        CREATE TABLE IF NOT EXISTS categorie (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT UNIQUE,
-            icona_path TEXT
-        )
-        """)
-
-        # 3. Tabella oggetti
-        conn.execute("""
-        CREATE TABLE IF NOT EXISTS oggetti (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            proprietario_id INTEGER,
-            id_proprietario INTEGER,
-            nome TEXT,
-            descrizione TEXT,
-            descrizione_breve TEXT,
-            descrizione_lunga TEXT,
-            categoria TEXT,
-            categoria_id INTEGER,
-            stato TEXT DEFAULT 'Disponibile',
-            immagine_url1 TEXT,
-            immagine_url2 TEXT,
-            disponibilita INTEGER DEFAULT 1,
-            FOREIGN KEY (proprietario_id) REFERENCES utenti(id),
-            FOREIGN KEY (categoria_id) REFERENCES categorie(id)
-        )
-        """)
-
-        # 4. Tabella prenotazioni
-        conn.execute("""
-        CREATE TABLE IF NOT EXISTS prenotazioni (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            oggetto_id INTEGER,
-            id_oggetto INTEGER,
-            utente_id INTEGER,
-            id_richiedente INTEGER,
-            data_inizio TEXT,
-            data_fine TEXT,
-            stato_prenotazione TEXT DEFAULT 'attiva',
-            stato TEXT DEFAULT 'in_attesa',
-            FOREIGN KEY (oggetto_id) REFERENCES oggetti(id),
-            FOREIGN KEY (utente_id) REFERENCES utenti(id)
-        )
-        """)
-
-        # 5. Tabella pagamenti
-        conn.execute("""
-        CREATE TABLE IF NOT EXISTS pagamenti (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            id_prenotazione INTEGER,
-            importo REAL,
-            stato TEXT,
-            tipo TEXT,
-            FOREIGN KEY (id_prenotazione) REFERENCES prenotazioni(id)
-        )
-        """)
+        conn.executescript(get_schema_scripts())
         conn.commit()
 
-        # Seed categorie if empty
-        cursor = conn.execute("SELECT COUNT(*) FROM categorie")
-        if cursor.fetchone()[0] == 0:
-            categorie_seed = [
-                ("Fai-da-te", "🛠️"),
-                ("Fotografia", "📷"),
-                ("Mobilità", "🚲"),
-                ("Elettronica", "💻"),
-                ("Giardinaggio", "🏡")
-            ]
-            conn.executemany(
-                "INSERT INTO categorie (nome, icona_path) VALUES (?, ?)",
-                categorie_seed
-            )
-            conn.commit()
-
-        # Seed utenti if empty
-        cursor = conn.execute("SELECT COUNT(*) FROM utenti")
-        if cursor.fetchone()[0] == 0:
-            utenti_seed = [
-                ("admin", "Amministratore", "admin@sharing.it", "pbkdf2:sha256:...", "PayPal"),
-                ("mario", "Mario Rossi", "mario@rossi.it", "pbkdf2:sha256:...", "Carta"),
-                ("luigi", "Luigi Verdi", "luigi@verdi.it", "pbkdf2:sha256:...", None)
-            ]
-            conn.executemany(
-                """
-                INSERT INTO utenti (username, nome, email, password_hash, metodo_pagamento)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                utenti_seed
-            )
-            conn.commit()
-
-        # Seed oggetti if empty
-        cursor = conn.execute("SELECT COUNT(*) FROM oggetti")
-        if cursor.fetchone()[0] == 0:
-            cat_rows = conn.execute("SELECT id, nome FROM categorie").fetchall()
-            cat_map = {row["nome"]: row["id"] for row in cat_rows}
-            user_rows = conn.execute("SELECT id, username FROM utenti").fetchall()
-            user_map = {row["username"]: row["id"] for row in user_rows}
-
-            # Descrizioni lunghe e brevi per gli oggetti seed
-            desc_bosch = (
-                "Trapano cordless professionale con valigetta e doppia batteria, "
-                "ideale per forare legno, metallo e plastica. Mandrino autoserrante da 13 mm."
-            )
-            desc_sony = (
-                "La fotocamera Sony Alpha 7 III offre prestazioni eccezionali grazie al "
-                "sensore retroilluminato da 24.2 MP, stabilizzazione a 5 assi e video 4K."
-            )
-            desc_xiaomi = (
-                "Bicicletta elettrica pieghevole Xiaomi Smart E-bike. Leggera, compatta, "
-                "con tre modalità di assistenza alla pedalata e fari LED integrati."
-            )
-
-            oggetti_seed = [
-                (
-                    "Trapano Avvitatore Bosch",
-                    "Trapano cordless professionale con due batterie",
-                    "Trapano cordless professionale con valigetta e doppia batteria.",
-                    desc_bosch,
-                    cat_map.get("Fai-da-te", 1),
-                    "Fai-da-te",
-                    user_map.get("mario", 2),
-                    user_map.get("mario", 2),
-                    "Disponibile",
-                    "https://images.unsplash.com/photo-1504148455328-c376907d081c?q=80&w=600",
-                    "https://images.unsplash.com/photo-1572981779307-38b8cabb2407?q=80&w=600",
-                    1
-                ),
-                (
-                    "Fotocamera Sony Alpha 7 III",
-                    "Fotocamera Mirrorless Full-Frame solo corpo",
-                    "Mirrorless Full-Frame ideale per foto e video di alta qualità.",
-                    desc_sony,
-                    cat_map.get("Fotografia", 2),
-                    "Fotografia",
-                    user_map.get("luigi", 3),
-                    user_map.get("luigi", 3),
-                    "Prenotato",
-                    "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600",
-                    "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?q=80&w=600",
-                    0
-                ),
-                (
-                    "Bicicletta Elettrica Xiaomi",
-                    "E-bike pieghevole con autonomia fino a 45km",
-                    "E-bike pieghevole, ottima per muoversi agilmente in città.",
-                    desc_xiaomi,
-                    cat_map.get("Mobilità", 3),
-                    "Mobilità",
-                    user_map.get("admin", 1),
-                    user_map.get("admin", 1),
-                    "Disponibile",
-                    "https://images.unsplash.com/photo-1485965120184-e220f721d03e?q=80&w=600",
-                    "https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?q=80&w=600",
-                    1
-                )
-            ]
-            conn.executemany(
-                """
-                INSERT INTO oggetti (
-                    nome, descrizione, descrizione_breve, descrizione_lunga,
-                    categoria_id, categoria, proprietario_id, id_proprietario,
-                    stato, immagine_url1, immagine_url2, disponibilita
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                oggetti_seed
-            )
-            conn.commit()
-
-            # Seed an active reservation for the booked camera
-            camera_row = conn.execute("SELECT id FROM oggetti WHERE nome LIKE '%Sony%'").fetchone()
-            if camera_row:
-                camera_id = camera_row["id"]
-                conn.execute(
-                    """
-                    INSERT INTO prenotazioni (
-                        oggetto_id, id_oggetto, utente_id, id_richiedente,
-                        data_inizio, data_fine, stato_prenotazione, stato
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (camera_id, camera_id, user_map.get("mario", 2), user_map.get("mario", 2),
-                     "2026-06-01", "2026-06-15", "attiva", "approvata")
-                )
-                conn.commit()
-
+        # Seed data separated into its own module seed_data.py
+        with conn:
+            seed_database(conn)
     finally:
         conn.close()
 
@@ -413,22 +281,22 @@ def create_prenotazione(
     """Crea una nuova prenotazione per un oggetto."""
     conn = get_connection()
     try:
-        conn.execute(
-            """
-            INSERT INTO prenotazioni
-            (oggetto_id, id_oggetto, utente_id, id_richiedente,
-             data_inizio, data_fine, stato_prenotazione, stato)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (id_oggetto, id_oggetto, id_richiedente, id_richiedente,
-             data_inizio, data_fine, "attiva", stato)
-        )
-        # Aggiorna lo stato dell'oggetto prenotato
-        conn.execute(
-            "UPDATE oggetti SET disponibilita = 0, stato = 'Prenotato' WHERE id = ?",
-            (id_oggetto,)
-        )
-        conn.commit()
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO prenotazioni
+                (oggetto_id, id_oggetto, utente_id, id_richiedente,
+                 data_inizio, data_fine, stato_prenotazione, stato)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (id_oggetto, id_oggetto, id_richiedente, id_richiedente,
+                 data_inizio, data_fine, "attiva", stato)
+            )
+            # Aggiorna lo stato dell'oggetto prenotato
+            conn.execute(
+                "UPDATE oggetti SET disponibilita = 0, stato = 'Prenotato' WHERE id = ?",
+                (id_oggetto,)
+            )
     finally:
         conn.close()
 
@@ -446,28 +314,28 @@ def update_prenotazione_stato(prenotazione_id, stato):
     """Aggiorna lo stato di una prenotazione."""
     conn = get_connection()
     try:
-        # If concluse or rifiutata, we free up the object!
-        if stato in ("conclusa", "rifiutata", "chiusa"):
-            # Find associated object id
-            row = conn.execute(
-                "SELECT oggetto_id FROM prenotazioni WHERE id = ?",
-                (prenotazione_id,)
-            ).fetchone()
-            if row:
-                obj_id = row["oggetto_id"]
-                conn.execute(
-                    "UPDATE oggetti SET disponibilita = 1, stato = 'Disponibile' WHERE id = ?",
-                    (obj_id,)
-                )
-            stato_prenotazione = "conclusa"
-        else:
-            stato_prenotazione = "attiva"
+        with conn:
+            # If concluse or rifiutata, we free up the object!
+            if stato in ("conclusa", "rifiutata", "chiusa"):
+                # Find associated object id
+                row = conn.execute(
+                    "SELECT oggetto_id FROM prenotazioni WHERE id = ?",
+                    (prenotazione_id,)
+                ).fetchone()
+                if row:
+                    obj_id = row["oggetto_id"]
+                    conn.execute(
+                        "UPDATE oggetti SET disponibilita = 1, stato = 'Disponibile' WHERE id = ?",
+                        (obj_id,)
+                    )
+                stato_prenotazione = "conclusa"
+            else:
+                stato_prenotazione = "attiva"
 
-        conn.execute(
-            "UPDATE prenotazioni SET stato = ?, stato_prenotazione = ? WHERE id = ?",
-            (stato, stato_prenotazione, prenotazione_id)
-        )
-        conn.commit()
+            conn.execute(
+                "UPDATE prenotazioni SET stato = ?, stato_prenotazione = ? WHERE id = ?",
+                (stato, stato_prenotazione, prenotazione_id)
+            )
     finally:
         conn.close()
 

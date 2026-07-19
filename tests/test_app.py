@@ -1,12 +1,14 @@
-import pytest
-from fastapi.testclient import TestClient
-from fastapi import FastAPI
+"""
+Unit tests for application integration.
+"""
 
+from fastapi.testclient import TestClient
 import sharing_platform.app as app_module
 import sharing_platform.router as router_module
 
 
 def test_root(monkeypatch):
+    """Test standard root path renders Lendly main page."""
     app = app_module.app
     client = TestClient(app)
 
@@ -18,10 +20,11 @@ def test_root(monkeypatch):
 
     assert res.status_code == 200
     # Confirm it rendered the HTML template correctly
-    assert "Sharing Platform" in res.text
+    assert "Lendly" in res.text
 
 
 def test_router_is_wired(monkeypatch):
+    """Test that the router is correctly wired within the FastAPI application instance."""
     # mock funzione DB per isolare app
     monkeypatch.setattr(router_module, "get_utenti", lambda: [{"id": 1}])
 

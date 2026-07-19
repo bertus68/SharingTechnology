@@ -154,17 +154,24 @@ def handle_create_oggetto(
     if not user:
         return RedirectResponse(url="/login", status_code=303)
 
-    create_oggetto(
-        nome=nome,
-        descrizione=descrizione_breve,
-        categoria=categoria,
-        disponibilita=True,
-        id_proprietario=user.id,
-        descrizione_breve=descrizione_breve,
-        descrizione_lunga=descrizione_lunga,
-        immagine_url1=immagine_url1,
-        immagine_url2=immagine_url2
-    )
+    try:
+        if not nome.strip() or not descrizione_breve.strip() or not descrizione_lunga.strip() or not categoria.strip():
+            raise ValueError("I campi obbligatori non possono essere vuoti")
+
+        create_oggetto(
+            nome=nome,
+            descrizione=descrizione_breve,
+            categoria=categoria,
+            disponibilita=True,
+            id_proprietario=user.id,
+            descrizione_breve=descrizione_breve,
+            descrizione_lunga=descrizione_lunga,
+            immagine_url1=immagine_url1,
+            immagine_url2=immagine_url2
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
     return RedirectResponse(url="/", status_code=303)
 
 
@@ -172,11 +179,16 @@ def handle_create_oggetto(
 def details_route(obj_id: int, request: Request):
     """Dettaglio di un singolo oggetto."""
     user = get_logged_in_user(request)
-    row = get_oggetto_con_prenotazione_by_id(obj_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="Oggetto non trovato")
+    try:
+        row = get_oggetto_con_prenotazione_by_id(obj_id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Oggetto non trovato")
+        oggetto = row_to_oggetto(row)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
-    oggetto = row_to_oggetto(row)
     return templates.TemplateResponse(
         request=request,
         name="details.html",
@@ -200,13 +212,33 @@ def handle_prenota_oggetto(
     if not user:
         return RedirectResponse(url="/login", status_code=303)
 
-    create_prenotazione(
-        id_oggetto=obj_id,
-        id_richiedente=user.id,
-        data_inizio=data_inizio,
-        data_fine=data_fine,
-        stato="approvata"
-    )
+    try:
+        row = get_oggetto_con_prenotazione_by_id(obj_id)
+        if not row:
+            raise HTTPException(status_code=404, detail="Oggetto non trovato")
+
+        oggetto = row_to_oggetto(row)
+        if not oggetto.disponibilita:
+            raise HTTPException(status_code=400, detail="Oggetto non disponibile per la prenotazione")
+
+        if not data_inizio or not data_fine:
+            raise HTTPException(status_code=400, detail="Le date di inizio e fine sono obbligatorie")
+
+        if data_fine < data_inizio:
+            raise HTTPException(status_code=400, detail="La data di fine non può essere precedente alla data di inizio")
+
+        create_prenotazione(
+            id_oggetto=obj_id,
+            id_richiedente=user.id,
+            data_inizio=data_inizio,
+            data_fine=data_fine,
+            stato="approvata"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
     return RedirectResponse(url=f"/oggetti/{obj_id}", status_code=303)
 
 

@@ -1,6 +1,8 @@
-import pytest
-from datetime import date
+"""
+Unit tests for domain models (Utente, Oggetto, Prenotazione, Pagamento).
+"""
 
+from datetime import date
 from sharing_platform.models import Utente, Oggetto, Prenotazione, Pagamento
 
 
@@ -8,6 +10,7 @@ from sharing_platform.models import Utente, Oggetto, Prenotazione, Pagamento
 # UTENTE
 # =========================
 def test_utente_creation():
+    """Test standard creation and defaults of Utente model."""
     u = Utente(
         id=1,
         nome="Mario Rossi",
@@ -26,6 +29,7 @@ def test_utente_creation():
 # OGGETTO
 # =========================
 def test_oggetto_creation():
+    """Test standard creation and defaults of Oggetto model."""
     o = Oggetto(
         id=10,
         nome="Trapano",
@@ -45,6 +49,7 @@ def test_oggetto_creation():
 # PRENOTAZIONE
 # =========================
 def test_prenotazione_creation():
+    """Test standard creation and defaults of Prenotazione model."""
     p = Prenotazione(
         id=100,
         id_oggetto=10,
@@ -63,6 +68,7 @@ def test_prenotazione_creation():
 # PAGAMENTO
 # =========================
 def test_pagamento_creation():
+    """Test standard creation and defaults of Pagamento model."""
     pay = Pagamento(
         id=500,
         id_prenotazione=100,
@@ -80,6 +86,7 @@ def test_pagamento_creation():
 # MOCK TEST (logica simulata)
 # =========================
 def test_relazione_logica_utente_oggetti():
+    """Test logical relation helper matching utenti with their objects list."""
     u = Utente(id=1, nome="A", email="a@a.it", password_hash="x")
     o1 = Oggetto(id=1, nome="A", descrizione="B", categoria="C", disponibilita=True, id_proprietario=1)
     o2 = Oggetto(id=2, nome="B", descrizione="C", categoria="D", disponibilita=True, id_proprietario=1)
