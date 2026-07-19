@@ -2004,72 +2004,76 @@ Nel complesso, il sistema rappresenta una soluzione bilanciata tra semplicità e
 
 ## 4.1 Introduzione
 
-Gestione dati sensibili e sicurezza utenti.
+In un ecosistema basato sulla condivisione Peer-to-Peer (P2P), la sicurezza delle transazioni e la tutela della riservatezza dei dati personali rappresentano le fondamenta su cui poggia l'intera architettura della piattaforma. Il successo di un modello di economia collaborativa è infatti strettamente correlato alla capacità dell'intermediario tecnologico di garantire un ambiente protetto e resiliente. Il presente capitolo analizza le strategie di difesa implementate, i rischi potenziali e le misure adottate per conformarsi alle normative vigenti in materia di protezione dei dati, assicurando la massima trasparenza e integrità in ogni interazione.
 
 ---
 
 ## 4.2 Protezione dati
 
-Principi GDPR:
-- Minimizzazione
-- Limitazione scopo
-- Riservatezza
-
-Password hashate e HTTPS.
+La piattaforma adotta un approccio *Privacy by Design*, conformandosi rigorosamente ai principi stabiliti dal Regolamento Generale sulla Protezione dei Dati (GDPR):
+*   **Minimizzazione:** Raccolta limitata ai soli dati strettamente necessari all'erogazione del servizio di prestito.
+*   **Limitazione scopo:** Utilizzo delle informazioni esclusivamente per le finalità esplicitate agli utenti al momento dell'onboarding.
+*   **Riservatezza:** Implementazione di protocolli di crittografia avanzata per la protezione delle comunicazioni (*TLS/HTTPS*) e delle credenziali sensibili. Le password degli utenti non sono mai salvate in chiaro, ma trasformate tramite algoritmi di hashing asimmetrico (*es. Argon2 o SHA-256 con salt*) per renderle inaccessibili in caso di violazione del database.
 
 ---
 
 ## 4.3 Pagamenti sicuri
 
-Uso di provider esterni e token.
+Per eliminare i rischi legati alla gestione interna di dati finanziari (carte di credito, IBAN), la piattaforma adotta la strategia della disintermediazione finanziaria. Il sistema si avvale di gateway di pagamento certificati *PCI-DSS* (es. Stripe, PayPal) che processano le transazioni in ambienti isolati. Il backend riceve esclusivamente un token crittografico univoco che identifica la transazione, garantendo che nessun dato finanziario sensibile transiti o venga archiviato all'interno dei server della piattaforma stessa.
 
 ---
 
 ## 4.4 Autenticazione
 
-- Login sicuro
-- Eventuale 2FA
-- Autorizzazioni differenziate
+L'accesso alle risorse è regolato da un meccanismo di autenticazione robusto:
+*   **Login sicuro:** Gestione delle sessioni tramite token temporanei (es. JWT), che scadono automaticamente dopo un periodo di inattività predefinito.
+*   **Autenticazione a due fattori (2FA):** Implementazione facoltativa di un secondo livello di verifica tramite SMS o authenticator app per le operazioni ad alto rischio.
+*   **Autorizzazioni differenziate:** Utilizzo di un sistema di *Role-Based Access Control* (RBAC), che garantisce agli utenti, ai moderatori e agli amministratori esclusivamente i privilegi necessari allo svolgimento delle proprie mansioni, prevenendo l'escalation dei privilegi.
 
 ---
 
 ## 4.5 Rischi
 
-- Accessi non autorizzati
-- Frodi
-- Attacchi SQL injection
-- Brute force
+Nonostante l'adozione di solide contromisure, il sistema deve fronteggiare minacce costanti:
+*   **Accessi non autorizzati:** Tentativi di bypassare le barriere di login.
+*   **Frodi:** Utenti malevoli che tentano di ottenere beni senza restituirli o di manipolare i sistemi di feedback.
+*   **Attacchi SQL injection:** Tentativi di manipolazione delle query del database per estrarre informazioni riservate.
+*   **Brute force:** Tentativi automatizzati di indovinare credenziali tramite dizionari di password comuni.
 
 ---
 
 ## 4.6 Mitigazioni
 
-- Validazione input
-- Query sicure
-- Logging
-- Monitoraggio
+La resilienza del sistema è garantita da tecniche di mitigazione proattive:
+*   **Validazione input:** Utilizzo di librerie dedicate (es. *Pydantic* in FastAPI) per sanitizzare rigorosamente ogni input utente, bloccando tentativi di iniezione di codice.
+*   **Query sicure:** Adozione di query parametrizzate per interagire con SQLite, prevenendo la vulnerabilità SQL injection.
+*   **Logging:** Tracciamento dettagliato delle operazioni critiche per facilitare l'analisi forense in caso di anomalie.
+*   **Monitoraggio:** Implementazione di sistemi di alerting automatico per rilevare tentativi ripetuti di accesso fallito o comportamenti insoliti (es. login da posizioni geografiche sospette).
 
 ---
 
 ## 4.7 Controversie
 
-- Segnalazioni
-- Amministrazione
-- Storico attività
+Per gestire eventuali contenziosi tra proprietari e richiedenti, la piattaforma offre strumenti di mediazione:
+*   **Segnalazioni:** Modulo dedicato per denunciare comportamenti scorretti o beni danneggiati.
+*   **Amministrazione:** Pannello di moderazione che permette agli amministratori di bloccare account o sospendere transazioni in caso di infrazione.
+*   **Storico attività:** Registro di sistema immodificabile che fornisce evidenze oggettive (date, chat, stati della transazione) utili per risolvere le controversie.
 
 ---
 
 ## 4.8 Aspetti legali
 
-- GDPR
-- Termini di servizio
-- Responsabilità utenti
+La tutela legale è garantita da:
+*   **Conformità GDPR:** Nomina del Titolare del trattamento, gestione del consenso e diritto all'oblio.
+*   **Termini di servizio:** Contratto vincolante che definisce chiaramente obblighi, diritti e limitazioni di responsabilità dell'intermediario.
+*   **Responsabilità utenti:** Clausole specifiche che scaricano la responsabilità civile e penale sull'utente finale in caso di uso improprio o illegale dei beni scambiati.
 
 ---
 
 ## 4.9 Considerazioni finali
 
-La sicurezza è fondamentale per la fiducia nella piattaforma.
+La sicurezza non è una condizione statica, ma un processo dinamico di continuo miglioramento. La fiducia degli utenti è l'asset più prezioso di una piattaforma di sharing economy; per questo, l'integrazione di tecniche di difesa all'avanguardia, unita a una gestione trasparente dei dati personali, rappresenta il principale fattore competitivo che distingue la piattaforma da soluzioni più approssimative, rendendo possibile una reale collaborazione tra privati.
+
 
 ---
 
@@ -2077,71 +2081,69 @@ La sicurezza è fondamentale per la fiducia nella piattaforma.
 
 ## 5.1 Introduzione
 
-Analisi critica del sistema.
+L'architettura proposta per la piattaforma di prestito P2P, pur rispondendo efficacemente agli obiettivi di sostenibilità e ottimizzazione delle risorse, presenta sfide intrinseche legate alla natura stessa della sharing economy e alla complessità tecnologica dei sistemi distribuiti. La presente analisi critica esamina i vincoli attuali del sistema e delinea le direttrici evolutive necessarie per una sua piena maturazione e scalabilità su larga scala.
 
 ---
 
 ## 5.2 Limiti
 
 ### 5.2.1 Fiducia utenti
-Rischio comportamenti scorretti.
+Il principale limite di ogni piattaforma P2P è il rischio di comportamenti scorretti (opportunismo, incuria verso i beni o mancata restituzione). Nonostante i sistemi di reputazione, la fiducia rimane una variabile dipendente dal capitale sociale degli utenti, difficile da codificare integralmente tramite algoritmi.
 
 ### 5.2.2 Logistica
-Necessità incontri fisici.
+La natura fisica dello scambio (l'oggetto deve essere fisicamente trasferito tra le parti) introduce una naturale frizione logistica. L'assenza di una rete di distribuzione centralizzata limita la velocità del servizio e richiede l'impegno attivo degli utenti per coordinare gli incontri fisici.
 
 ### 5.2.3 Normativa
-Complessità legale.
+La complessità legale legata alla responsabilità civile (danni a terzi, responsabilità del proprietario vs. utilizzatore) rappresenta un'area grigia. La mancanza di un quadro normativo specifico per il prestito occasionale tra privati crea incertezze contrattuali che il sistema deve mitigare attraverso termini di servizio molto stringenti.
 
 ### 5.2.4 Servizi esterni
-Dipendenza da provider.
+L'architettura dipende da provider terzi per il processamento dei pagamenti (es. Stripe) e l'infrastruttura di hosting. Qualsiasi interruzione o variazione nelle policy di tali provider può compromettere la continuità operativa del servizio.
 
 ### 5.2.5 Scalabilità
-Problemi di carico.
+L'attuale adozione di un database SQLite, pur ottima per prototipazione, pone limiti strutturali alla gestione di un traffico elevato con numerose transazioni simultanee in scrittura, rendendo necessaria una futura migrazione verso sistemi RDBMS distribuiti (es. PostgreSQL).
 
 ---
 
 ## 5.3 Miglioramenti
 
-- Rating utenti
-- Notifiche
-- Chat interna
-- Calendari avanzati
+Per elevare la qualità dell'esperienza utente, si prevedono i seguenti miglioramenti funzionali:
+*   **Rating utenti:** Implementazione di un sistema di recensioni bidirezionali basato su parametri oggettivi (puntualità, stato del bene).
+*   **Notifiche:** Integrazione di un sistema avanzato di push notification e email per gestire in tempo reale lo stato delle prenotazioni.
+*   **Chat interna:** Introduzione di una messaggistica criptata end-to-end per proteggere la privacy degli utenti ed evitare la disintermediazione.
+*   **Calendari avanzati:** Sincronizzazione automatica con i principali calendari digitali (Google, Outlook) per facilitare la gestione dei prestiti.
 
 ---
 
 ## 5.4 Integrazione servizi
 
-- Pagamenti
-- Geolocalizzazione
-- Spedizioni
+L'integrazione con servizi esterni è cruciale per ridurre le frizioni operative:
+*   **Pagamenti:** Implementazione di portafogli digitali (e-wallet) per gestire rimborsi e depositi in modo istantaneo.
+*   **Geolocalizzazione:** Integrazione di API cartografiche per visualizzare la disponibilità degli oggetti in base alla prossimità geografica (raggio d'azione).
+*   **Spedizioni:** Partnership con corrieri espressi per automatizzare il ritiro e la consegna dell'oggetto, superando il vincolo dell'incontro fisico.
 
 ---
 
 ## 5.5 Evoluzioni future
 
-- Assicurazioni
-- Criptovalute
-- AI
-- Espansione aziendale
+La roadmap tecnologica della piattaforma prevede:
+*   **Assicurazioni:** Stipula di polizze assicurative collettive che coprano automaticamente ogni transazione contro furto o danneggiamento.
+*   **Criptovalute:** Supporto per pagamenti in asset digitali per abbattere le commissioni bancarie internazionali.
+*   **AI:** Introduzione di algoritmi di machine learning per suggerire oggetti basati sui gusti degli utenti e per il rilevamento preventivo di attività fraudolente.
+*   **Espansione aziendale:** Evoluzione da modello C2C a modelli ibridi B2C, permettendo anche a piccole attività commerciali di noleggiare attrezzature.
 
 ---
 
 ## 5.6 Impatto
 
-Sociale:
-- Collaborazione
-
-Economico:
-- Risparmio
-
-Ambientale:
-- Riduzione sprechi
+*   **Sociale:** Favorisce la creazione di comunità di quartiere e rafforza i legami di collaborazione tra i cittadini[span_0](start_span)[span_0](end_span).
+*   **Economico:** Genera un risparmio tangibile per gli utilizzatori e una fonte di reddito passivo per i proprietari degli asset[span_1](start_span)[span_1](end_span).
+*   **Ambientale:** Contribuisce concretamente alla riduzione degli sprechi e alla diminuzione della necessità di produzione di nuovi beni di consumo[span_2](start_span)[span_2](end_span).
 
 ---
 
 ## 5.7 Considerazioni finali
 
-Il sistema ha forte potenziale evolutivo.
+Sebbene il sistema affronti sfide significative in termini di sicurezza e logistica, il potenziale evolutivo rimane elevato. La capacità di integrare intelligenza artificiale e servizi assicurativi trasformerà la piattaforma da un semplice aggregatore di annunci a un ecosistema completo per l'economia circolare, garantendo sicurezza agli attori e valore per l'intera comunità[span_3](start_span)[span_3](end_span).
 
 ---
 
