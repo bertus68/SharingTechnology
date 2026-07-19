@@ -2,24 +2,226 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sharing Platform - Home</title>
-    <!-- Includi Tailwind o il tuo CSS -->
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <header><!-- Logo e Navbar --></header>
-    <main>
-        <section id="search-bar">...</section>
-        <section id="categorie">...</section>
-        
-        <!-- Lista dinamica -->
-        <div id="lista-oggetti">
-            <!-- Esempio di elemento generato dinamicamente -->
-            <div class="card-oggetto" onclick="window.location.href='/dettaglio.html?id=1'">
-                <h3 class="nome">Trapano Avvitatore Bosch</h3>
-                <span class="stato">Disponibile ora</span>
+<body class="bg-gray-50 text-gray-900 flex flex-col min-h-screen">
+
+    <!-- HEADER -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Logo -->
+            <a href="/" class="flex items-center space-x-2 text-indigo-600 font-extrabold text-xl tracking-wider">
+                <i class="fa-solid fa-people-carry-box text-2xl"></i>
+                <span>SHARING PLATFORM - P2P</span>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex space-x-8 font-medium text-gray-600">
+                <a href="/" class="hover:text-indigo-600 transition-colors">Home</a>
+                <a href="/#categories" class="hover:text-indigo-600 transition-colors">Categorie</a>
+                {% if user %}
+                <a href="/oggetti/crea" class="hover:text-indigo-600 transition-colors text-indigo-500 font-semibold">
+                    <i class="fa-solid fa-plus-circle mr-1"></i>Condividi Oggetto
+                </a>
+                {% endif %}
+            </nav>
+
+            <!-- User Profile Area -->
+            <div class="flex items-center space-x-4">
+                {% if user %}
+                <div class="flex items-center space-x-2 bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100">
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                        {{ user.nome[0] | upper }}
+                    </div>
+                    <span class="hidden sm:inline font-semibold text-gray-800 text-sm mr-2">{{ user.nome }}</span>
+                    <a href="/logout" class="text-xs text-red-500 hover:text-red-700 font-bold transition-colors">Esci</a>
+                </div>
+                {% else %}
+                <a href="/login" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm shadow-sm flex items-center space-x-1">
+                    <i class="fa-solid fa-sign-in-alt"></i>
+                    <span>Accedi / Registrati</span>
+                </a>
+                {% endif %}
             </div>
         </div>
+    </header>
+
+    <!-- HERO & SEARCH BAR -->
+    <section class="bg-gradient-to-r from-indigo-800 to-purple-800 text-white py-12 px-4 shadow-inner">
+        <div class="max-w-4xl mx-auto text-center space-y-6">
+            <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight">Prestito di oggetti sicuro e sostenibile tra privati</h1>
+            <p class="text-indigo-100 text-base md:text-lg max-w-2xl mx-auto">
+                Condividi quello che non usi, risparmia e aiuta a costruire una comunità a zero sprechi.
+            </p>
+
+            <!-- Barra di Ricerca Centrale -->
+            <form action="/" method="GET" class="flex flex-col sm:flex-row items-center bg-white p-2 rounded-xl shadow-lg max-w-2xl mx-auto space-y-2 sm:space-y-0 sm:space-x-2">
+                <div class="flex items-center flex-1 px-3 w-full">
+                    <i class="fa-solid fa-magnifying-glass text-gray-400 mr-2"></i>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Cosa stai cercando? (es. Trapano, Fotocamera...)"
+                           class="w-full text-gray-800 focus:outline-none py-2 text-sm md:text-base">
+                </div>
+                {% if category_filter %}
+                <input type="hidden" name="category" value="{{ category_filter }}">
+                {% endif %}
+                <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-lg transition-colors">
+                    Cerca
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow space-y-12">
+
+        <!-- CATEGORIE (Sliding / Cards) -->
+        <section id="categories" class="space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center space-x-2">
+                    <i class="fa-solid fa-tags text-indigo-500"></i>
+                    <span>Esplora Categorie</span>
+                </h2>
+                {% if category_filter or search_query %}
+                <a href="/" class="text-sm font-semibold text-indigo-600 hover:text-indigo-800">
+                    Cancella filtri <i class="fa-solid fa-times-circle"></i>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Sliding cards row -->
+            <div class="flex space-x-4 overflow-x-auto pb-4 pt-1 scrollbar-hide snap-x">
+                <!-- All category -->
+                <a href="/" class="snap-start shrink-0 min-w-[140px] p-4 bg-white rounded-xl border {% if not category_filter %}border-indigo-500 ring-2 ring-indigo-100 bg-indigo-50/20{% else %}border-gray-200 hover:border-indigo-300{% endif %} shadow-sm flex flex-col items-center justify-center space-y-2 text-center transition-all">
+                    <span class="text-2xl">🌍</span>
+                    <span class="font-bold text-sm text-gray-800">Tutti</span>
+                </a>
+                {% for cat in categorie %}
+                <a href="/?category={{ cat.id }}{% if search_query %}&search={{ search_query }}{% endif %}"
+                   class="snap-start shrink-0 min-w-[140px] p-4 bg-white rounded-xl border {% if category_filter == cat.id %}border-indigo-500 ring-2 ring-indigo-100 bg-indigo-50/20{% else %}border-gray-200 hover:border-indigo-300{% endif %} shadow-sm flex flex-col items-center justify-center space-y-2 text-center transition-all">
+                    <span class="text-2xl">{{ cat.icona_path }}</span>
+                    <span class="font-bold text-sm text-gray-800">{{ cat.nome }}</span>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <!-- LISTA OGGETTI -->
+        <section class="space-y-6">
+            <h2 class="text-xl md:text-2xl font-extrabold text-gray-800 flex items-center space-x-2">
+                <i class="fa-solid fa-boxes-stacked text-indigo-500"></i>
+                <span>Oggetti Disponibili</span>
+            </h2>
+
+            {% if oggetti %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for o in oggetti %}
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col group cursor-pointer"
+                     onclick="window.location.href='/oggetti/{{ o.id }}'">
+
+                    <!-- Immagine dell'oggetto -->
+                    <div class="relative aspect-video overflow-hidden bg-gray-100">
+                        <img src="{{ o.immagine_url1 or 'https://images.unsplash.com/photo-1504148455328-c376907d081c?q=80&w=600' }}"
+                             alt="{{ o.nome }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+
+                        <!-- Badge dinamico dello stato -->
+                        <div class="absolute top-3 left-3">
+                            {% if o.stato == 'Disponibile' %}
+                            <span class="bg-emerald-500 text-white text-xs font-black px-2.5 py-1 rounded-full shadow-md tracking-wider flex items-center space-x-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                <span>Disponibile ora</span>
+                            </span>
+                            {% else %}
+                            <span class="bg-rose-500 text-white text-xs font-black px-2.5 py-1 rounded-full shadow-md tracking-wider flex items-center space-x-1.5">
+                                <i class="fa-solid fa-calendar-check text-[10px]"></i>
+                                <span>Prenotato fino al {{ o.prenotazione.data_fine if o.prenotazione else '...' }}</span>
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Contenuto card -->
+                    <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between text-xs font-bold text-indigo-500 tracking-wider uppercase">
+                                <span>{{ o.categoria }}</span>
+                            </div>
+                            <h3 class="font-extrabold text-gray-900 group-hover:text-indigo-600 transition-colors text-base line-clamp-1">
+                                {{ o.nome }}
+                            </h3>
+                            <p class="text-sm text-gray-500 line-clamp-2">
+                                {{ o.descrizione_breve }}
+                            </p>
+                        </div>
+
+                        <!-- Bottone di azione simulato -->
+                        <div class="pt-2 border-t border-gray-50 flex items-center justify-between text-sm">
+                            <span class="text-indigo-600 font-bold group-hover:underline flex items-center space-x-1">
+                                <span>Scopri di più</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Nessun Oggetto Trovato -->
+            <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center max-w-xl mx-auto space-y-4">
+                <div class="w-16 h-16 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto text-2xl">
+                    <i class="fa-solid fa-search"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-800">Nessun oggetto trovato</h3>
+                <p class="text-gray-500 text-sm">
+                    Prova a modificare i filtri di ricerca o la categoria selezionata.
+                </p>
+                <a href="/" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors text-sm">
+                    Ricarica tutti gli oggetti
+                </a>
+            </div>
+            {% endif %}
+        </section>
+
     </main>
-    <script src="app.js"></script>
+
+    <!-- FOOTER -->
+    <footer class="bg-gray-900 text-gray-400 border-t border-gray-800 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="space-y-4 col-span-1 md:col-span-2">
+                <span class="text-white font-extrabold text-lg tracking-wider flex items-center space-x-2">
+                    <i class="fa-solid fa-people-carry-box text-indigo-500 text-2xl"></i>
+                    <span>SHARING PLATFORM - P2P</span>
+                </span>
+                <p class="text-sm text-gray-400 max-w-sm">
+                    La soluzione moderna basata sulla sharing economy per noleggiare e condividere attrezzatura di ogni tipo in modo sicuro ed efficiente.
+                </p>
+            </div>
+            <div class="space-y-3">
+                <h4 class="text-white font-bold text-sm tracking-wider uppercase">Navigazione Rapida</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+                    <li><a href="/#categories" class="hover:text-white transition-colors">Categorie</a></li>
+                    <li><a href="/login" class="hover:text-white transition-colors">Accedi</a></li>
+                </ul>
+            </div>
+            <div class="space-y-3">
+                <h4 class="text-white font-bold text-sm tracking-wider uppercase">Contatti & Supporto</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:text-white transition-colors">Centro Assistenza</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Norme sulla Privacy</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Termini di Servizio</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-8 border-t border-gray-800 text-center text-xs text-gray-500">
+            &copy; 2026 SHARING PLATFORM - P2P. Tutti i diritti riservati. Progetto di Tesi in Sharing Economy.
+        </div>
+    </footer>
+
 </body>
 </html>
