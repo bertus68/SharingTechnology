@@ -20,58 +20,7 @@ def setup_db():
         os.remove(TEST_DB)
 
     conn = sqlite3.connect(TEST_DB)
-    conn.executescript("""
-        CREATE TABLE utenti (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            nome TEXT,
-            email TEXT,
-            password_hash TEXT,
-            metodo_pagamento TEXT
-        );
-
-        CREATE TABLE categorie (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT,
-            icona_path TEXT
-        );
-
-        CREATE TABLE oggetti (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            proprietario_id INTEGER,
-            id_proprietario INTEGER,
-            nome TEXT,
-            descrizione TEXT,
-            descrizione_breve TEXT,
-            descrizione_lunga TEXT,
-            categoria TEXT,
-            categoria_id INTEGER,
-            stato TEXT,
-            immagine_url1 TEXT,
-            immagine_url2 TEXT,
-            disponibilita INTEGER
-        );
-
-        CREATE TABLE prenotazioni (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            oggetto_id INTEGER,
-            id_oggetto INTEGER,
-            utente_id INTEGER,
-            id_richiedente INTEGER,
-            data_inizio TEXT,
-            data_fine TEXT,
-            stato_prenotazione TEXT,
-            stato TEXT
-        );
-
-        CREATE TABLE pagamenti (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            id_prenotazione INTEGER,
-            importo REAL,
-            stato TEXT,
-            tipo TEXT
-        );
-    """)
+    conn.executescript(database.get_schema_scripts())
     conn.close()
 
     yield
